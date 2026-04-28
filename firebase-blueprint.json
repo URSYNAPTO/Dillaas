@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and subscription data",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "plan": { "type": "string", "enum": ["free", "basic", "pro", "business"] },
+        "usageCount": { "type": "integer" },
+        "lastUsageReset": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "plan", "usageCount"]
+    },
+    "ToolUsage": {
+      "title": "Tool Usage",
+      "description": "Log of AI tool executions",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "toolId": { "type": "string" },
+        "prompt": { "type": "string" },
+        "response": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "toolId", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User documents"
+    },
+    "/users/{userId}/history/{usageId}": {
+      "schema": "ToolUsage",
+      "description": "History of tool usage for a user"
+    }
+  }
+}

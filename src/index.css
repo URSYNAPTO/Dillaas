@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  
+  --color-brand-bg: #0a0a0f;
+  --color-brand-primary: #6c63ff;
+  --color-brand-secondary: #00d4ff;
+  --color-brand-accent: #ff6b6b;
+  --color-brand-text: #a0a0b0;
+}
+
+@layer base {
+  body {
+    background-color: #0a0a0f;
+    color: white;
+    @apply font-sans antialiased selection:bg-brand-primary/30;
+  }
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.neon-border {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(108, 99, 255, 0.2);
+}
+
+.neon-border:hover {
+  box-shadow: 0 0 20px rgba(108, 99, 255, 0.2);
+  border: 1px solid rgba(108, 99, 255, 0.5);
+  transform: translateY(-5px) scale(1.02);
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-primary via-brand-secondary to-brand-primary;
+  background-size: 200% auto;
+  animation: shine 5s linear infinite;
+}
+
+@keyframes shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+.grid-overlay {
+  background-image: 
+    linear-gradient(rgba(108, 99, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108, 99, 255, 0.05) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(108, 99, 255, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(108, 99, 255, 0.6); }
+}

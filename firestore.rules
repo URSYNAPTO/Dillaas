@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helper Functions ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Entity Validations ---
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'plan', 'usageCount']) &&
+             data.keys().size() >= 4 &&
+             data.uid == request.auth.uid &&
+             data.email is string && data.email.size() <= 256 &&
+             data.plan in ['free', 'basic', 'pro', 'business'] &&
+             data.usageCount is int && data.usageCount >= 0;
+    }
+
+    function isValidToolUsage(data) {
+      return data.keys().hasAll(['userId', 'toolId', 'timestamp']) &&
+             data.userId == request.auth.uid &&
+             data.toolId is string && data.toolId.size() <= 100 &&
+             data.timestamp == request.time; // Strict server timestamp
+    }
+
+    // --- Collections ---
+
+    // Admins Collection: Read-only for admins themselves, or managed via console
+    match /admins/{adminId} {
+      allow get: if isSignedIn(); // Allow checking if user is admin
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin(); // Only admins can list users
+      
+      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().createdAt == request.time;
+      
+      allow update: if (isOwner(userId) || isAdmin()) && 
+                       isValidUser(incoming()) &&
+                       (
+                         // Action: Profile Update
+                         (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt']) && incoming().updatedAt == request.time) ||
+                         // Action: Usage Increment
+                         (incoming().diff(existing()).affectedKeys().hasOnly(['usageCount', 'lastUsageReset', 'updatedAt']) && incoming().updatedAt == request.time) ||
+                         // Support for Admins
+                         isAdmin()
+                       );
+      
+      // History subcollection
+      match /history/{usageId} {
+        allow list: if isOwner(userId) || isAdmin();
+        allow get: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidToolUsage(incoming());
+      }
+    }
+  }
+}
